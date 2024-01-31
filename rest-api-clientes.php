@@ -100,8 +100,9 @@ function registrar_endpoint_rest_clientes() {
     register_rest_route( 'clientes/v1', '/todos', array(
         'methods' => WP_REST_Server::READABLE,
         'callback' => 'obtener_clientes',
-        'permisions_callback' => function($request){
-            return current_user_can('edit_posts');
+        
+        'permission_callback' => function($request){
+            if(current_user_can('edit_posts')) return true;
         }
     ));
 
@@ -132,4 +133,19 @@ function registrar_endpoint_rest_clientes() {
         ),
     ) );
 }
-add_action( 'rest_api_init', 'registrar_endpoint_rest_clientes' );
+
+
+function my_custom_rest_cors() {
+  remove_filter( 'rest_pre_serve_request', 'rest_send_cors_headers' );
+  add_filter( 'rest_pre_serve_request', function( $value ) {
+    header( 'Access-Control-Allow-Origin: *' );
+    header( 'Access-Control-Allow-Methods: GET' );
+    header( 'Access-Control-Allow-Credentials: true' );
+    header( 'Access-Control-Expose-Headers: Link', false );
+
+    return $value;
+  } );
+}
+
+
+add_action( 'rest_api_init', 'registrar_endpoint_rest_clientes','my_custom_rest_cors' );
